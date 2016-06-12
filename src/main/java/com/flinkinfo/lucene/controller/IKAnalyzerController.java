@@ -12,28 +12,36 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 分词控制器
+ *
+ * @author nico huangwenzeng1@163.com
+ */
 @Controller
 @RequestMapping("/ik")
-public class IKAnalyzerController {
-	
-	@ResponseBody
-	@RequestMapping(value="split")
-	public String splitWord(String text,String isMaxLength) throws IOException{
-		
-		StringReader re = new StringReader(text);
-    	IKSegmenter ik = new IKSegmenter(re,isMaxLength.equals("1")?true:false);
-    	
-    	String splited="";
-    	
-    	Lexeme lex = null;
-    	
-    	List<String> list=new ArrayList<String>();
-    	
-    	while((lex=ik.next())!=null){
-    		list.add(lex.getLexemeText());
-    	}
-    	
-    	return JSONObject.toJSONString(list);
-	}
+public class IKAnalyzerController
+{
+
+    @ResponseBody
+    @RequestMapping(value = "split")
+    public String splitWord(String text, String isMaxLength) throws IOException
+    {
+
+        StringReader re = new StringReader(text);
+        IKSegmenter ik = new IKSegmenter(re, isMaxLength.equals("1") ? true : false);
+
+        String splited = "";
+
+        Lexeme lex = null;
+
+        List<String> list = new ArrayList<String>();
+
+        while ((lex = ik.next()) != null)
+        {
+            list.add(lex.getLexemeText());
+        }
+
+        return JSONObject.toJSONString(list);
+    }
 
 }

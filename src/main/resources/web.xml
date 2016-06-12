@@ -64,14 +64,16 @@
 
     <util:constant id="LUCENE_VERSION" static-field="org.apache.lucene.util.Version.LUCENE_48"></util:constant>
 
+    <!--配置索引位置-->
     <bean id="directory" class="org.apache.lucene.store.SimpleFSDirectory">
         <constructor-arg>
             <bean class="java.io.File">
-                <constructor-arg value="C:\\index" />
+                <constructor-arg value="/Users/nico/index" />
             </bean>
         </constructor-arg>
     </bean>
 
+    <!--分词-->
     <bean id="analyzer" class="org.wltea.analyzer.lucene.IKAnalyzer">
         <constructor-arg value="true"></constructor-arg>
     </bean>
