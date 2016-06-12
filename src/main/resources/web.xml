@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
+    <!-- 对web包中所有类进行扫描,以完成bean创建和自动依赖注入的功能-->
+    <context:component-scan base-package="com.flinkinfo"/>
+    <context:property-placeholder location="classpath:*.properties" file-encoding="UTF-8"/>
+
+    <mvc:annotation-driven/>
+
+    <!--freemarker配置-->
+    <bean id="freemarkerResolver" class="org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver">
+        <property name="order" value="1"/>
+        <property name="suffix" value=".ftl"/>
+        <property name="contentType" value="text/html;charset=utf-8"/>
+        <property name="viewClass">
+            <value>org.springframework.web.servlet.view.freemarker.FreeMarkerView</value>
+        </property>
+    </bean>
+
+    <!--配置设置-->
+    <bean id="freemarkerConfig"
+          class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+        <property name="templateLoaderPath" value="/WEB-INF/temp"/>
+        <property name="defaultEncoding" value="utf-8"/>
+        <property name="freemarkerSettings">
+            <props>
+                <prop key="template_update_delay">10</prop>
+                <prop key="locale">zh_CN</prop>
+                <prop key="datetime_format">yyyy-MM-dd</prop>
+                <prop key="date_format">yyyy-MM-dd</prop>
+                <prop key="number_format">#.##</prop>
+            </props>
+        </property>
+    </bean>
+
+    <!--json数据传递-->
+    <bean id="conversionService" class="org.springframework.format.support.FormattingConversionServiceFactoryBean"/>
+
+    <mvc:annotation-driven conversion-service="conversionService">
+        <mvc:message-converters>
+            <bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+                <property name="supportedMediaTypes" value="application/json"/>
+                <property name="features">
+                    <list>
+                        <value>DisableCircularReferenceDetect</value>
+                        <value>QuoteFieldNames</value>
+                    </list>
+                </property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <!--lucene-->
+    <!-- 配置扫描路径 -->
+    <context:component-scan base-package="com.flinkinfo.lucene">
+        <!-- 只扫描Service，也可以添加Repostory，但是要把Controller排除在外，Controller由spring-mvc.xml去加载 -->
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Service" />
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+    </context:component-scan>
+
+    <util:constant id="LUCENE_VERSION" static-field="org.apache.lucene.util.Version.LUCENE_48"></util:constant>
+
+    <bean id="directory" class="org.apache.lucene.store.SimpleFSDirectory">
+        <constructor-arg>
+            <bean class="java.io.File">
+                <constructor-arg value="C:\\index" />
+            </bean>
+        </constructor-arg>
+    </bean>
+
+    <bean id="analyzer" class="org.wltea.analyzer.lucene.IKAnalyzer">
+        <constructor-arg value="true"></constructor-arg>
+    </bean>
+
+    <bean id="indexWriterConfig" class="org.apache.lucene.index.IndexWriterConfig">
+        <constructor-arg name="matchVersion" ref="LUCENE_VERSION" />
+        <constructor-arg name="analyzer" ref="analyzer"></constructor-arg>
+    </bean>
+
+    <bean id="indexWriter" class="org.apache.lucene.index.IndexWriter">
+        <constructor-arg name="d" ref="directory" />
+        <constructor-arg name="conf" ref="indexWriterConfig" />
+    </bean>
+
+    <!-- 排除Service,Dao,Controller -->
+    <context:component-scan base-package="com.flinkinfo.lucene">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Service"/>
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Repository"/>
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!-- 定时器调度任务注解 -->
+    <task:annotation-driven executor="executor" scheduler="scheduler"/>
+    <task:executor id="executor" pool-size="10"/>
+    <task:scheduler id="scheduler" pool-size="20"/>
+
+    <!-- 启用MVC注解 -->
+    <mvc:annotation-driven>
+        <mvc:message-converters>
+            <bean class="com.flinkinfo.lucene.UTF8StringHttpMessageConverter"></bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+</beans>
